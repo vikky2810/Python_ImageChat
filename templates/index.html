@@ -3,11 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
-
     <title>Chatbot</title>
   </head>
   <body>
@@ -22,6 +27,17 @@
 
       <!-- Input Area -->
       <div id="input-area">
+        <!-- Image Preview and Cancel Button -->
+        <div id="image-preview-container" style="display: none">
+          <img
+            id="image-preview"
+            src="#"
+            alt="Image Preview"
+            class="uploaded-image"
+          />
+          <button id="cancel-preview">×</button>
+        </div>
+
         <!-- Upload Button with SVG Icon -->
         <label for="image-file" class="file-upload-label">
           <svg
@@ -71,11 +87,15 @@
     <script>
       // Load existing messages when the page loads
       document.addEventListener("DOMContentLoaded", function () {
+        // Clear the chat messages when the page loads
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = ""; // Clear all messages
+
+        // Load existing messages (if any)
         fetch("/get_conversation", { method: "GET" })
           .then((response) => response.json())
           .then((data) => {
             if (data.messages && data.messages.length > 0) {
-              const messagesDiv = document.getElementById("messages");
               data.messages.forEach((message) => {
                 if (message.role === "user") {
                   messagesDiv.innerHTML += `<div class="message user">${message.content}</div>`;
@@ -83,7 +103,7 @@
                   messagesDiv.innerHTML += `<div class="message bot">${message.content}</div>`;
                 }
               });
-              messagesDiv.scrollTop = messagesDiv.scrollHeight;
+              messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
             }
           })
           .catch((error) =>
@@ -91,6 +111,44 @@
           );
       });
 
+      // Show image preview when a file is selected
+      document
+        .getElementById("image-file")
+        .addEventListener("change", function (e) {
+          const imageFile = e.target.files[0];
+          const previewContainer = document.getElementById(
+            "image-preview-container"
+          );
+          const previewImage = document.getElementById("image-preview");
+
+          if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              // Display the image preview
+              previewImage.src = e.target.result;
+              previewContainer.style.display = "block";
+            };
+            reader.readAsDataURL(imageFile);
+          }
+        });
+
+      // Cancel preview and clear file input
+      document
+        .getElementById("cancel-preview")
+        .addEventListener("click", function () {
+          const previewContainer = document.getElementById(
+            "image-preview-container"
+          );
+          const previewImage = document.getElementById("image-preview");
+          const fileInput = document.getElementById("image-file");
+
+          // Hide preview and clear file input
+          previewContainer.style.display = "none";
+          previewImage.src = "#";
+          fileInput.value = "";
+        });
+
+      // Send message or image
       document.getElementById("send-button").onclick = function () {
         const userInput = document.getElementById("user-input").value;
         const imageFile = document.getElementById("image-file").files[0];
@@ -107,9 +165,9 @@
           const reader = new FileReader();
           reader.onload = function (e) {
             messagesDiv.innerHTML += `
-                        <div class="message user">
-                            <img src="${e.target.result}" alt="Uploaded Image" class="uploaded-image">
-                        </div>`;
+              <div class="message user">
+                <img src="${e.target.result}" alt="Uploaded Image" class="uploaded-image">
+              </div>`;
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
           };
           reader.readAsDataURL(imageFile);
@@ -145,6 +203,9 @@
         // Clear inputs
         document.getElementById("user-input").value = "";
         document.getElementById("image-file").value = "";
+        document.getElementById("image-preview-container").style.display =
+          "none";
+        document.getElementById("image-preview").src = "#";
       };
 
       // Allow pressing "Enter" to send messages

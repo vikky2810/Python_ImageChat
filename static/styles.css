@@ -69,6 +69,7 @@ body {
 
 /* Input Area */
 #input-area {
+  position: relative; /* Needed for absolute positioning of the preview */
   display: flex;
   gap: 8px;
   padding: 16px;
@@ -158,4 +159,46 @@ body {
   max-width: 200px;
   height: auto;
   border-radius: 8px;
+}
+
+/* Image Preview Container */
+#image-preview-container {
+  position: absolute; /* Position it absolutely */
+  bottom: 70px; /* Adjust this value to position it above the Upload button */
+  left: 16px; /* Align with the left edge of the input area */
+  text-align: center;
+  z-index: 1; /* Ensure it appears above other elements */
+  display: none; /* Hidden by default */
+}
+
+/* Image Preview */
+#image-preview {
+  max-width: 100px; /* Small size for preview */
+  max-height: 100px;
+  border-radius: 8px;
+  border: 1px solid #e5e5ea;
+}
+
+/* Cancel Button */
+#cancel-preview {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+#cancel-preview:hover {
+  background: #ff1a1a;
 }
