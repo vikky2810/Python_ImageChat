@@ -1,85 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+
     <title>Chatbot</title>
-</head>
-<body>
+  </head>
+  <body>
     <div id="chat-container">
-        <!-- Chat Header -->
-        <div id="chat-header">
-            Chatbot
-        </div>
+      <!-- Chat Header -->
+      <div id="chat-header">Image Recognition Chatbot</div>
 
-        <!-- Messages Display -->
-        <div id="messages">
-            <!-- Messages will be dynamically added here -->
-        </div>
+      <!-- Messages Display -->
+      <div id="messages">
+        <!-- Messages will be dynamically added here -->
+      </div>
 
-        <!-- Input Area -->
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your message here...">
-            <label for="image-file" class="file-upload-label">Upload Image</label>
-            <input type="file" id="image-file" accept="image/*">
-            <button id="send-button">Send</button>
-        </div>
+      <!-- Input Area -->
+      <div id="input-area">
+        <!-- Upload Button with SVG Icon -->
+        <label for="image-file" class="file-upload-label">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M19 13v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5M12 15V3m0 0l4 4m-4-4L8 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span>Upload</span>
+        </label>
+        <input type="file" id="image-file" accept="image/*" />
+
+        <!-- Input Field -->
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your message here..."
+        />
+
+        <!-- Send Button with SVG Icon -->
+        <button id="send-button">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <script>
-        document.getElementById('send-button').onclick = function() {
-            const userInput = document.getElementById('user-input').value;
-            const imageFile = document.getElementById('image-file').files[0];
-            const messagesDiv = document.getElementById('messages');
+      document.getElementById("send-button").onclick = function () {
+        const userInput = document.getElementById("user-input").value;
+        const imageFile = document.getElementById("image-file").files[0];
+        const messagesDiv = document.getElementById("messages");
 
-            // Display user's message or image immediately
-            if (userInput) {
-                messagesDiv.innerHTML += `<div class="message user">${userInput}</div>`;
-            }
-            if (imageFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    messagesDiv.innerHTML += `
+        // Display user's message or image immediately
+        if (userInput) {
+          messagesDiv.innerHTML += `<div class="message user">${userInput}</div>`;
+        }
+        if (imageFile) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            messagesDiv.innerHTML += `
                         <div class="message user">
                             <img src="${e.target.result}" alt="Uploaded Image" class="uploaded-image">
                         </div>`;
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
-                };
-                reader.readAsDataURL(imageFile);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
+          };
+          reader.readAsDataURL(imageFile);
+        }
+
+        // Send data to the server
+        const formData = new FormData();
+        formData.append("message", userInput);
+        if (imageFile) {
+          formData.append("image_file", imageFile);
+        }
+
+        fetch("/chat", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Display bot's response
+            if (data.response) {
+              messagesDiv.innerHTML += `<div class="message bot">${data.response}</div>`;
             }
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
+          });
 
-            // Send data to the server
-            const formData = new FormData();
-            formData.append('message', userInput);
-            if (imageFile) {
-                formData.append('image_file', imageFile);
-            }
+        // Clear inputs
+        document.getElementById("user-input").value = "";
+        document.getElementById("image-file").value = "";
+      };
 
-            fetch('/chat', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Display bot's response
-                if (data.response) {
-                    messagesDiv.innerHTML += `<div class="message bot">${data.response}</div>`;
-                }
-                messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
-            });
-
-            // Clear inputs
-            document.getElementById('user-input').value = '';
-            document.getElementById('image-file').value = '';
-        };
-
-        // Allow pressing "Enter" to send messages
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('send-button').click();
-            }
+      // Allow pressing "Enter" to send messages
+      document
+        .getElementById("user-input")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            document.getElementById("send-button").click();
+          }
         });
     </script>
-</body>
+  </body>
 </html>
