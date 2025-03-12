@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv('.env.local')
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Add a secret key for session management
 
 # Initialize the Google Gen AI client
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')  # Get API key from environment
@@ -24,42 +25,89 @@ MODEL_ID = "gemini-2.0-flash"  # You can change this to another model if needed
 
 @app.route('/')
 def index():
+    # Initialize conversation history if it doesn't exist
+    if 'messages' not in session:
+        session['messages'] = []
     return render_template('index.html')
+
+@app.route('/get_conversation', methods=['GET'])
+def get_conversation():
+    # Return the current conversation history
+    return jsonify({"messages": session.get('messages', [])})
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.form.get('message')
+    # Get or initialize conversation history
+    messages = session.get('messages', [])
+    
+    user_message = request.form.get('message', '')
     image_file = request.files.get('image_file')
+
+    # Store user message for display
+    if user_message:
+        messages.append({"role": "user", "content": user_message})
 
     if image_file:
         # Process the uploaded image
         response = process_image(image_file)
-        return jsonify({"response": response})
-
-    # Normal chat response
-    response = generate_response(user_message)
+    else:
+        # Generate response with conversation context
+        response = generate_response(user_message, messages)
+    
+    # Store bot response for display
+    messages.append({"role": "bot", "content": response})
+    
+    # Save updated conversation to session
+    session['messages'] = messages
+    
     return jsonify({"response": response})
 
-def generate_response(message):
-    response = client.models.generate_content(
-        model=MODEL_ID,
-        contents=message
-    )
-    return response.text
+def generate_response(user_message, messages):
+    try:
+        # Create a conversation history string
+        conversation_history = ""
+        
+        # Include the last few messages for context (to avoid token limits)
+        context_messages = messages[-10:] if len(messages) > 10 else messages
+        
+        for msg in context_messages:
+            if msg["role"] == "user":
+                conversation_history += f"User: {msg['content']}\n"
+            else:
+                conversation_history += f"Assistant: {msg['content']}\n"
+        
+        # Add the current query with context
+        prompt = f"{conversation_history}User: {user_message}\nAssistant:"
+        
+        # Send to model
+        response = client.models.generate_content(
+            model=MODEL_ID,
+            contents=prompt
+        )
+        
+        return response.text
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "I'm having trouble processing that request. Could you try again?"
 
 def process_image(image_file):
-    # Open the image file
-    image = Image.open(image_file)
-
-    # Generate a prompt based on the image
-    prompt = "Describe the content of this image."
-    
-    # Send the image and prompt to the model
-    response = client.models.generate_content(
-        model=MODEL_ID,
-        contents=[image, prompt]
-    )
-    return response.text
+    try:
+        # Open the image file
+        image = Image.open(image_file)
+        
+        # Generate a prompt based on the image
+        prompt = "Describe the content of this image."
+        
+        # Send the image and prompt to the model
+        response = client.models.generate_content(
+            model=MODEL_ID,
+            contents=[image, prompt]
+        )
+        return response.text
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return f"I'm having trouble analyzing this image. Error: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True)
+

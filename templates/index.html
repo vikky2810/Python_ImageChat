@@ -69,10 +69,35 @@
     </div>
 
     <script>
+      // Load existing messages when the page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        fetch("/get_conversation", { method: "GET" })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.messages && data.messages.length > 0) {
+              const messagesDiv = document.getElementById("messages");
+              data.messages.forEach((message) => {
+                if (message.role === "user") {
+                  messagesDiv.innerHTML += `<div class="message user">${message.content}</div>`;
+                } else {
+                  messagesDiv.innerHTML += `<div class="message bot">${message.content}</div>`;
+                }
+              });
+              messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+          })
+          .catch((error) =>
+            console.error("Error loading conversation:", error)
+          );
+      });
+
       document.getElementById("send-button").onclick = function () {
         const userInput = document.getElementById("user-input").value;
         const imageFile = document.getElementById("image-file").files[0];
         const messagesDiv = document.getElementById("messages");
+
+        // Don't proceed if both input and image are empty
+        if (!userInput && !imageFile) return;
 
         // Display user's message or image immediately
         if (userInput) {
@@ -92,7 +117,9 @@
 
         // Send data to the server
         const formData = new FormData();
-        formData.append("message", userInput);
+        if (userInput) {
+          formData.append("message", userInput);
+        }
         if (imageFile) {
           formData.append("image_file", imageFile);
         }
@@ -108,6 +135,11 @@
               messagesDiv.innerHTML += `<div class="message bot">${data.response}</div>`;
             }
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            messagesDiv.innerHTML += `<div class="message bot">Sorry, there was an error processing your request.</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
           });
 
         // Clear inputs
