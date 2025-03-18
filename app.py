@@ -88,7 +88,7 @@ def generate_response(user_message, messages):
         return response.text
     except Exception as e:
         print(f"Error generating response: {e}")
-        return "I'm having trouble processing that request. Could you try again?"
+        return "Network Error : Please connect to Internet!!!"
 
 def process_image(image_file):
     try:
