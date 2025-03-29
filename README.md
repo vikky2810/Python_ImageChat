@@ -25,8 +25,8 @@ Ensure you have the following installed:
 ### Steps
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/yourrepository.git
-   cd yourrepository
+   git clone https://github.com/vikky2810/Python_ImageChat.git
+   cd Python_ImageChat
    ```
 
 2. Create a virtual environment (optional but recommended):
@@ -35,12 +35,7 @@ Ensure you have the following installed:
    source venv/bin/activate  # On Windows use: venv\Scripts\activate
    ```
 
-3. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
+3. Set up environment variables:
    - Create a `.env.local` file in the root directory.
    - Add your Google API key:
      ```ini
@@ -70,17 +65,6 @@ Ensure you have the following installed:
 3. The AI will generate a response based on previous messages.
 4. Upload an image to analyze its content.
 
-## Project Structure
-```
-project-folder/
-│-- templates/
-│   ├── index.html  # Frontend UI
-│-- static/
-│-- .env.local      # Environment variables (not to be committed)
-│-- app.py          # Main Flask app
-│-- requirements.txt # Dependencies
-```
-
 ## Environment Variables
 The project uses environment variables stored in a `.env.local` file. The required variable is:
 - `GOOGLE_API_KEY` - Your Google GenAI API key
@@ -90,9 +74,7 @@ The project uses environment variables stored in a `.env.local` file. The requir
 - API key security is crucial; do not expose it publicly.
 - You can change the AI model by modifying `MODEL_ID` in `app.py`.
 
-## License
-This project is licensed under the MIT License.
 
 ## Author
-[Vikram Kamble](https://github.com/yourgithubprofile)
+[Vikram Kamble](https://github.com/vikky2810)
 
